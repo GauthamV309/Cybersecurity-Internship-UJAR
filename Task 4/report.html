@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Web Vulnerability Assessment Report</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background-color: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+    }
+    h1, h2, h3 {
+      color: #2c3e50;
+    }
+    .section {
+      background-color: #fff;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .issue {
+      border-left: 6px solid #e74c3c;
+      padding-left: 1rem;
+      margin-top: 1rem;
+    }
+    .severity {
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-weight: bold;
+      color: #fff;
+    }
+    .severity-critical { background-color: #8e0000; }
+    .severity-high { background-color: #c0392b; }
+    .severity-medium { background-color: #e67e22; }
+    .severity-low { background-color: #2980b9; }
+    .fix {
+      background-color: #ecf9ec;
+      padding: 0.75rem;
+      border-left: 4px solid #27ae60;
+      margin-top: 0.5rem;
+    }
+    code {
+      background-color: #eee;
+      padding: 0.2rem 0.4rem;
+      font-family: Consolas, monospace;
+      border-radius: 3px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 0.5rem;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    .poc {
+      background-color: #fdf2f2;
+      border-left: 4px solid #e74c3c;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cover -->
+  <h1>Vulnerability Assessment Report</h1>
+  <p><strong>Target Application:</strong> http://127.0.0.1:8000 (DVWA Instance)</p>
+  <p><strong>Assessment Tool:</strong> OWASP ZAP v2.14.0</p>
+  <p><strong>Scan Type:</strong> Full Active Scan</p>
+  <p><strong>Date:</strong> August 15, 2025</p>
+  <p><strong>Assessor:</strong> Security Team</p>
+
+  <div class="section">
+    <h2>Executive Summary</h2>
+    <p>The security assessment identified <strong>12 vulnerabilities</strong>, including <strong>3 Critical/High</strong>, <strong>4 Medium</strong>, and <strong>5 Low</strong>. 
+    The most severe issues include SQL Injection, Reflected XSS, and IDOR, which could lead to unauthorized data access, credential theft, and full system compromise.</p>
+    <p>Immediate remediation is recommended for critical issues. Medium and low-severity issues should be addressed as part of ongoing secure development practices.</p>
+  </div>
+
+  <div class="section">
+    <h2>Severity Rating Legend</h2>
+    <table>
+      <tr><th>Severity</th><th>Description</th></tr>
+      <tr><td><span class="severity severity-critical">Critical</span></td><td>Exploitation leads to full system compromise or critical data leakage.</td></tr>
+      <tr><td><span class="severity severity-high">High</span></td><td>Exploitation may allow unauthorized access or privilege escalation.</td></tr>
+      <tr><td><span class="severity severity-medium">Medium</span></td><td>Vulnerability may aid in further attacks or affect confidentiality/integrity.</td></tr>
+      <tr><td><span class="severity severity-low">Low</span></td><td>Informational issues or minor misconfigurations.</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Top 5 Issues Found</h2>
+
+    <div class="issue">
+      <h3>1. Reflected Cross-Site Scripting (XSS)</h3>
+      <p><strong>Severity:</strong> <span class="severity severity-high">High</span></p>
+      <p><strong>CWE:</strong> CWE-79 | <strong>OWASP Top 10:</strong> A03:2021 - Injection</p>
+      <p><strong>Description:</strong> Unsanitized input on <code>/search</code> endpoint is reflected in the response without escaping, allowing arbitrary JavaScript injection.</p>
+      <p><strong>Test Payload:</strong> <code>&lt;script&gt;alert(1)&lt;/script&gt;</code></p>
+      <div class="poc">
+        <strong>Proof of Concept (HTTP Response Snippet):</strong><br>
+        <pre>
+GET /search?q=%3Cscript%3Ealert(1)%3C/script%3E
+...
+&lt;div&gt;Search results for: &lt;script&gt;alert(1)&lt;/script&gt;&lt;/div&gt;
+        </pre>
+      </div>
+      <div class="fix">
+        <strong>Remediation:</strong>
+        <ul>
+          <li>Use proper output encoding for HTML/JS contexts.</li>
+          <li>Sanitize user inputs with libraries (e.g., DOMPurify).</li>
+          <li>Implement a strict Content Security Policy (CSP).</li>
+        </ul>
+      </div>
+      <p><strong>CVSS v3.1 Base Score:</strong> 7.4 (High)</p>
+    </div>
+
+    <div class="issue">
+      <h3>2. SQL Injection</h3>
+      <p><strong>Severity:</strong> <span class="severity severity-critical">Critical</span></p>
+      <p><strong>CWE:</strong> CWE-89 | <strong>OWASP Top 10:</strong> A03:2021 - Injection</p>
+      <p><strong>Description:</strong> Login form is vulnerable to SQL injection, enabling authentication bypass.</p>
+      <p><strong>Test Payload:</strong> <code>' OR '1'='1</code></p>
+      <div class="poc">
+        <strong>Proof of Concept:</strong><br>
+        <pre>
+POST /login HTTP/1.1
+username=admin' OR '1'='1'--
+password=anything
+        </pre>
+      </div>
+      <div class="fix">
+        <strong>Remediation:</strong>
+        <ul>
+          <li>Use parameterized queries or prepared statements.</li>
+          <li>Apply strict input validation.</li>
+          <li>Restrict DB user privileges (least privilege principle).</li>
+        </ul>
+      </div>
+      <p><strong>CVSS v3.1 Base Score:</strong> 9.8 (Critical)</p>
+    </div>
+
+    <div class="issue">
+      <h3>3. Insecure Direct Object Reference (IDOR)</h3>
+      <p><strong>Severity:</strong> <span class="severity severity-high">High</span></p>
+      <p><strong>CWE:</strong> CWE-639 | <strong>OWASP Top 10:</strong> A01:2021 - Broken Access Control</p>
+      <p><strong>Description:</strong> Manipulating the <code>user_id</code> parameter allows access to other users’ data.</p>
+      <p><strong>Example:</strong> <code>/profile?user_id=104</code></p>
+      <div class="fix">
+        <strong>Remediation:</strong>
+        <ul>
+          <li>Enforce server-side authorization checks.</li>
+          <li>Use indirect object references (UUIDs/tokens).</li>
+        </ul>
+      </div>
+      <p><strong>CVSS v3.1 Base Score:</strong> 8.7 (High)</p>
+    </div>
+
+    <div class="issue">
+      <h3>4. Missing HTTP Security Headers</h3>
+      <p><strong>Severity:</strong> <span class="severity severity-medium">Medium</span></p>
+      <p><strong>CWE:</strong> CWE-693 | <strong>OWASP Top 10:</strong> A05:2021 - Security Misconfiguration</p>
+      <p><strong>Description:</strong> Application lacks important HTTP security headers, exposing it to XSS, clickjacking, and MIME-sniffing attacks.</p>
+      <p><strong>Missing Headers:</strong> <code>X-Content-Type-Options</code>, <code>X-Frame-Options</code>, <code>Content-Security-Policy</code></p>
+      <div class="fix">
+        <strong>Remediation:</strong>
+        <ul>
+          <li>Set <code>X-Frame-Options: DENY</code> or use CSP frame-ancestors.</li>
+          <li>Add <code>X-Content-Type-Options: nosniff</code>.</li>
+          <li>Configure Content-Security-Policy appropriately.</li>
+        </ul>
+      </div>
+      <p><strong>CVSS v3.1 Base Score:</strong> 6.5 (Medium)</p>
+    </div>
+
+    <div class="issue">
+      <h3>5. Passwords Transmitted Over HTTP</h3>
+      <p><strong>Severity:</strong> <span class="severity severity-medium">Medium</span></p>
+      <p><strong>CWE:</strong> CWE-319 | <strong>OWASP Top 10:</strong> A02:2021 - Cryptographic Failures</p>
+      <p><strong>Description:</strong> Login credentials are transmitted in plaintext over HTTP.</p>
+      <p><strong>Affected URL:</strong> <code>http://127.0.0.1:8000/login</code></p>
+      <div class="fix">
+        <strong>Remediation:</strong>
+        <ul>
+          <li>Enforce HTTPS and redirect all HTTP traffic.</li>
+          <li>Use TLS 1.2+ with strong ciphers.</li>
+          <li>Enable HSTS for strict transport security.</li>
+        </ul>
+      </div>
+      <p><strong>CVSS v3.1 Base Score:</strong> 7.1 (High)</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Conclusion & Recommendations</h2>
+    <p>The scan identified multiple severe vulnerabilities that could allow attackers to compromise the target application and its data.</p>
+    <ul>
+      <li><strong>Immediate Priority:</strong> Fix SQL Injection, Reflected XSS, and IDOR issues.</li>
+      <li><strong>Short Term:</strong> Enforce HTTPS, configure HTTP headers, and review access controls.</li>
+      <li><strong>Ongoing:</strong> Adopt secure coding practices, regular penetration testing, and developer security training.</li>
+    </ul>
+  </div>
+
+</body>
+</html>
