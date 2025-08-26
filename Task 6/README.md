@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Thanks! Based on your detailed **Mini Guide** and the context, here's a concise **student-style lab report** or **task write-up** following those instructions. You can use or adapt it for documentation, assignments, or training material.
 
 ---
@@ -5,6 +6,11 @@ Thanks! Based on your detailed **Mini Guide** and the context, here's a concise 
 # 🔬 **Mini Lab Report: Traffic Sniffing Using Wireshark**
 
 **Name**: \[Your Name]
+=======
+# Task 6: **Mini Lab Report: Traffic Sniffing Using Wireshark**
+
+**Name**: Gautham V
+>>>>>>> 68780020ce9751d9f7b5a41f6367ece5a0216364
 **Date**: August 19, 2025
 **OS Used**: Windows 11 / Linux Ubuntu 22.04
 **Tool**: Wireshark v4.x
